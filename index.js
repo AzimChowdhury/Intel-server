@@ -16,11 +16,20 @@ function run() {
   try {
     client.connect()
     const productCollection = client.db("Intel").collection("productCollection");
-    
-    app.get('/products', async(req,res)=>{
+    const reviewCollection = client.db("Intel").collection("reviewCollection");
+
+    //get all the products for home page 
+    app.get('/products', async (req, res) => {
       const result = await productCollection.find().toArray();
       res.send(result)
+    });
+
+    //get review
+    app.get('/review', async (req, res) => {
+      const result = await reviewCollection.find().toArray();
+      res.send(result)
     })
+
 
 
   }
