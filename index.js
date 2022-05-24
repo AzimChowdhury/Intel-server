@@ -89,6 +89,13 @@ function run() {
       const query = { email: email };
       const result = await userCollection.findOne(query);
       res.send(result)
+    });
+
+    //post a review
+    app.post('/addReview', async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result)
     })
 
 
