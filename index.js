@@ -96,6 +96,39 @@ function run() {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
       res.send(result)
+    });
+
+    //add a new product
+    app.post('/addProduct', async (req, res) => {
+      const product = req.body;
+      const result = await productCollection.insertOne(product);
+      res.send(result)
+    });
+
+    //get all users
+    app.get('/users', async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result)
+    });
+
+    //make admin
+    app.put('/makeAdmin/:email', async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: { role: 'admin' }
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result)
+    });
+
+    //get an user by email 
+    app.get('/user/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await userCollection.findOne(query);
+      res.send(result)
     })
 
 
