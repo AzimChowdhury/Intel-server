@@ -192,6 +192,20 @@ function run() {
       res.send(result)
     })
 
+    //deliver a product
+    app.put('/deliver/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true }
+      const updateDoc = {
+        $set: {
+          delivery: 'shipped'
+        }
+      }
+      const result = await orderCollection.updateOne(filter, updateDoc, options)
+      res.send(result)
+    })
+
 
   }
   finally {
