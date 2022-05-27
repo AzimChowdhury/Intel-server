@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000;
 app.use(cors())
 app.use(express.json())
 
-
+//error solved
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6t7o3.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -206,7 +206,7 @@ function run() {
     app.post('/createPaymentIntent', async (req, res) => {
       const { cost } = req.body;
       console.log(cost)
-      const amount = cost * 100;
+      const amount = parseInt(cost) * 100;
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: 'usd',
