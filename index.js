@@ -3,6 +3,7 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
 require('dotenv').config()
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
@@ -13,6 +14,26 @@ app.use(express.json())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6t7o3.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.send({ message: 'UnAuthorized access' });
+  }
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.JWT_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.send({ message: 'Forbidden access' })
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
+
+
+
 
 function run() {
   try {
@@ -42,7 +63,7 @@ function run() {
       res.send(result)
     })
     //post an order
-    app.post('/order', async (req, res) => {
+    app.post('/order', verifyToken, async (req, res) => {
       const data = req.body;
       const result = await orderCollection.insertOne(data)
       res.send(result)
@@ -66,11 +87,12 @@ function run() {
         $set: user,
       }
       const result = await userCollection.updateOne(filter, updateDoc, options)
-      res.send(result)
+      const token = jwt.sign({ email: user.email }, process.env.JWT_TOKEN, { expiresIn: '3h' })
+      res.send({ result, token })
     });
 
     //update user info
-    app.put('/userInfo', async (req, res) => {
+    app.put('/userInfo', verifyToken, async (req, res) => {
       const { email, name, education, location, number } = req.body;
 
       const filter = { email: email };
@@ -93,14 +115,14 @@ function run() {
     });
 
     //post a review
-    app.post('/addReview', async (req, res) => {
+    app.post('/addReview', verifyToken, async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
       res.send(result)
     });
 
     //add a new product
-    app.post('/addProduct', async (req, res) => {
+    app.post('/addProduct', verifyToken, async (req, res) => {
       const product = req.body;
       const result = await productCollection.insertOne(product);
       res.send(result)
@@ -113,7 +135,7 @@ function run() {
     });
 
     //make admin
-    app.put('/makeAdmin/:email', async (req, res) => {
+    app.put('/makeAdmin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
       const options = { upsert: true };
@@ -139,7 +161,7 @@ function run() {
     });
 
     //delete an order
-    app.delete('/order/:id', async (req, res) => {
+    app.delete('/order/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: ObjectId(id) }
@@ -148,7 +170,7 @@ function run() {
     })
 
     //delete a product
-    app.delete('/product/:id', async (req, res) => {
+    app.delete('/product/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: ObjectId(id) }
@@ -193,7 +215,7 @@ function run() {
     })
 
     //deliver a product
-    app.put('/deliver/:id', async (req, res) => {
+    app.put('/deliver/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true }
