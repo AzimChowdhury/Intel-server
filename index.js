@@ -1,11 +1,11 @@
 const express = require('express');
-const cors = require('cors');
 const app = express();
+const cors = require('cors');
 require('dotenv').config()
-const port = process.env.PORT || 5000;
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+const port = process.env.PORT || 5000;
 
 //middleware
 app.use(cors())
@@ -206,7 +206,7 @@ function run() {
     app.post('/createPaymentIntent', async (req, res) => {
       const { cost } = req.body;
       console.log(cost)
-      const amount = parseInt(cost) * 100;
+      const amount = cost * 100;
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: 'usd',
