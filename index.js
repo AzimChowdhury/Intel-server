@@ -15,6 +15,7 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6t7o3.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+//verify jwt token 
 
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -42,6 +43,22 @@ function run() {
     const reviewCollection = client.db("Intel").collection("reviewCollection");
     const orderCollection = client.db("Intel").collection("orderCollection");
     const userCollection = client.db("Intel").collection("userCollection");
+
+
+
+    const verifyAdmin = async (req, res, next) => {
+      const requesterEmail = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({ email: requesterEmail });
+      if (requesterAccount?.role === 'admin') {
+        next();
+      }
+      else {
+        res.send({ message: 'forbidden' });
+      }
+    }
+
+
+
 
     //get all the products for home page 
     app.get('/products', async (req, res) => {
@@ -122,20 +139,20 @@ function run() {
     });
 
     //add a new product
-    app.post('/addProduct', verifyToken, async (req, res) => {
+    app.post('/addProduct', verifyToken, verifyAdmin, async (req, res) => {
       const product = req.body;
       const result = await productCollection.insertOne(product);
       res.send(result)
     });
 
     //get all users
-    app.get('/users', async (req, res) => {
+    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result)
     });
 
     //make admin
-    app.put('/makeAdmin/:email', verifyToken, async (req, res) => {
+    app.put('/makeAdmin/:email', verifyToken, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
       const options = { upsert: true };
@@ -155,7 +172,7 @@ function run() {
     });
 
     //get all orders for admin
-    app.get('/orders', async (req, res) => {
+    app.get('/orders', verifyToken, verifyAdmin, async (req, res) => {
       const result = await orderCollection.find().toArray();
       res.send(result)
     });
@@ -170,7 +187,7 @@ function run() {
     })
 
     //delete a product
-    app.delete('/product/:id', verifyToken, async (req, res) => {
+    app.delete('/product/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: ObjectId(id) }
@@ -215,7 +232,7 @@ function run() {
     })
 
     //deliver a product
-    app.put('/deliver/:id', verifyToken, async (req, res) => {
+    app.put('/deliver/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true }
