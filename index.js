@@ -80,7 +80,7 @@ function run() {
       res.send(result)
     })
     //post an order
-    app.post('/order', verifyToken, async (req, res) => {
+    app.post('/order', async (req, res) => {
       const data = req.body;
       const result = await orderCollection.insertOne(data)
       res.send(result)
@@ -109,7 +109,7 @@ function run() {
     });
 
     //update user info
-    app.put('/userInfo', verifyToken, async (req, res) => {
+    app.put('/userInfo', async (req, res) => {
       const { email, name, education, location, number } = req.body;
 
       const filter = { email: email };
@@ -132,27 +132,27 @@ function run() {
     });
 
     //post a review
-    app.post('/addReview', verifyToken, async (req, res) => {
+    app.post('/addReview', async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
       res.send(result)
     });
 
     //add a new product
-    app.post('/addProduct', verifyToken, verifyAdmin, async (req, res) => {
+    app.post('/addProduct', verifyAdmin, async (req, res) => {
       const product = req.body;
       const result = await productCollection.insertOne(product);
       res.send(result)
     });
 
     //get all users
-    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+    app.get('/users', verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result)
     });
 
     //make admin
-    app.put('/makeAdmin/:email', verifyToken, verifyAdmin, async (req, res) => {
+    app.put('/makeAdmin/:email', verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
       const options = { upsert: true };
@@ -172,13 +172,13 @@ function run() {
     });
 
     //get all orders for admin
-    app.get('/orders', verifyToken, verifyAdmin, async (req, res) => {
+    app.get('/orders', verifyAdmin, async (req, res) => {
       const result = await orderCollection.find().toArray();
       res.send(result)
     });
 
     //delete an order
-    app.delete('/order/:id', verifyToken, async (req, res) => {
+    app.delete('/order/:id', async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: ObjectId(id) }
@@ -187,7 +187,7 @@ function run() {
     })
 
     //delete a product
-    app.delete('/product/:id', verifyToken, verifyAdmin, async (req, res) => {
+    app.delete('/product/:id', verifyAdmin, async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: ObjectId(id) }
@@ -232,7 +232,7 @@ function run() {
     })
 
     //deliver a product
-    app.put('/deliver/:id', verifyToken, verifyAdmin, async (req, res) => {
+    app.put('/deliver/:id', verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true }
